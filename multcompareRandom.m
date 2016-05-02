@@ -30,6 +30,7 @@ function [multps, cimat] = multcompareRandom(myvar, ...
             error('Unexpected number of inputs');   
         end
     else
+        verbose = 0;
         alpha = 0.05;
     end
     
