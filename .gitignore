@@ -49,3 +49,6 @@ Temporary Items
 # Mathworks' m-files
 stdrcdf.m
 stdrinv.m
+
+# MATLAB autosave files
+*.asv

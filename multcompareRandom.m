@@ -32,7 +32,7 @@ function [multps, cimat] = multcompareRandom(myvar, ...
     else
         alpha = 0.05;
     end
-
+    
     % Check that is a random model
     if ~strcmp(mystats.varnames(2),mystats.rtnames(1))
         error('First factor must be fixed; second factor must be random');
@@ -62,7 +62,7 @@ function [multps, cimat] = multcompareRandom(myvar, ...
     % calculate SE. Following Zar, I based SE on the number of data points
     % per treatment and ms-error. (but seems like more sensible to use 
     % denominator ms (mystats.msdenom(1)) and n = df denominator)
-    se = (mystats.mse.*...
+    se = (mystats.msdenom(1).*...
        (1./grpns(mypairs(:,1))+1./grpns(mypairs(:,2)))/2).^0.5;
     % Was way too conservative with Zar's method.
     % Try the following:
@@ -72,14 +72,9 @@ function [multps, cimat] = multcompareRandom(myvar, ...
     %Calculate p-values for differences in group means.
     multps=nan(nl1,1);
     for l=1:mystats.nlevels(1)
-% Zar's approach (commented) appeared too conservative.
        multps(l)=1-stdrcdf(...
              abs(mt(mypairs(l,1))-mt(mypairs(l,2)))/se(l),...
-             round(mystats.dfdenom(1)), length(mt));
-% But this was even more conservative:
-%        multps(l)=1-stdrcdf(...
-%            abs(mt(mypairs(l,1))-mt(mypairs(l,2)))/se,...
-%            round(mystats.dfdenom(1)), length(mt));
+             round(mystats.dfdenom(1)), nl1);
     end
     
     %Calculate 95% ci's for differences among means.
