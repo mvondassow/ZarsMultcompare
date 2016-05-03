@@ -1,18 +1,24 @@
 function [multps, cimat] = multcompareRandom(myvar, ...
     factor1, mystats, varargin)
 % Do multiple comparisons and CI procedure from Zar (Tukey's method).
-% Inputs:
+% 
+% Assumes either a 1 way ANOVA or a multiway ANOVA, for multiway ANOVAs
+% (2-way, 3-way, etc) first factor must be a fixed factor whose levels will
+% be compared, and second factor must be a categorical random factor.
+%
+% Inputs (positional):
 %   myvar : numeric 1D array of dependent variable
 %   factor1 : 1D array listing treatment levels of factor 1 for each datum
 %   mystats : stats structure produced by ANOVAN
-%   alpha : (optional) float<1, alpha value for comparison (default = 0.05)
+%   alpha : (optional) float<1. Alpha value for comparison (default = 0.05)
+%   verbose : (optional) 0, true or 0, false. Whether to display a table
+%       with pairwise comparisons, CIs, and P values.
+%
 % Outputs: 
-%   citable : cell array with one header row of cells, one column naming
-%       treatment pairs (strings; column 1), then lower bound of CI
-%       (numeric; column 2), mean difference (numeric; column 3), upper
-%       bound of CI (numeric; column 3), P value(numeric; column 4).
-%   meantable : cell array with treatment manes (string; column 1) and
-%       estimated means (numeric; column 2)
+%   multps : array with P values for pairwise comparisons.
+%   citmat : array with CIs for differences among treatment levels for
+%       factor 1 (first column: lower bound; middle column: mean; third
+%       column: upper bound)
 
     % Check that arguments are valid
     if nargin > 3
@@ -34,9 +40,20 @@ function [multps, cimat] = multcompareRandom(myvar, ...
         alpha = 0.05;
     end
     
-    % Check that is a random model
-    if ~strcmp(mystats.varnames(2),mystats.rtnames(1))
-        error('First factor must be fixed; second factor must be random');
+    % Check whether it is one way or multi-way anova, and identify msdenom 
+    % and dfdenom accordingly (based on how MATLAB generates stats
+    % structure).
+    if isequal(mystats.terms, 1)
+        msdenom = mystats.mse;
+        dfdenom = mystats.dfe;
+    else
+        % if it is multiway ANOVA check that it has first factor fixed, 
+        % and second factor random.
+        if ~strcmp(mystats.varnames(2),mystats.rtnames(1))
+            error('First factor must be fixed; second factor must be random');
+        end
+        dfdenom = mystats.dfdenom(1);
+        msdenom = mystats.msdenom(1);
     end
 
     % Names and sample size per subgroup (at level of treatment)
@@ -60,26 +77,20 @@ function [multps, cimat] = multcompareRandom(myvar, ...
     %mypairs contains a list of pairs of treatments for the first factor.
     mypairs = nchoosek([1:nl1], 2);
     
-    % calculate SE. Following Zar, I based SE on the number of data points
-    % per treatment and ms-error. (but seems like more sensible to use 
-    % denominator ms (mystats.msdenom(1)) and n = df denominator)
-    se = (mystats.msdenom(1).*...
-       (1./grpns(mypairs(:,1))+1./grpns(mypairs(:,2)))/2).^0.5;
-    % Was way too conservative with Zar's method.
-    % Try the following:
-    %se = (mystats.msdenom(1)/mystats.nlevels(2))^0.5;
-    % Even more conservative
-
+    % Calculate SE following Zar. 
+    se = (msdenom.*...
+            (1./grpns(mypairs(:,1))+1./grpns(mypairs(:,2)))/2).^0.5;
+        
     %Calculate p-values for differences in group means.
     multps=nan(nl1,1);
     for l=1:mystats.nlevels(1)
        multps(l)=1-stdrcdf(...
              abs(mt(mypairs(l,1))-mt(mypairs(l,2)))/se(l),...
-             round(mystats.dfdenom(1)), nl1);
+             round(dfdenom), nl1);
     end
     
     %Calculate 95% ci's for differences among means.
-    cidif=stdrinv(1-alpha,round(mystats.dfdenom(1)),nl1).*se;
+    cidif=stdrinv(1-alpha,round(dfdenom),nl1).*se;
     %Estimate of mean difference:
     meandifs=mt(mypairs(:,1))-mt(mypairs(:,2));
     
