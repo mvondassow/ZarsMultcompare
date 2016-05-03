@@ -16,6 +16,10 @@
 % error~N(0,1). Setting randsd = 1 or interaction = 1 means the variance
 % components associated with these terms is 1; setting slope = 1 makes 
 % maximum the difference among subgroup members due to T reach 1.
+%
+% 2016Mat03: Added 2 simulations for more than 3 treatment levels (many
+% more comparisons) because some multiple comparisons procedures work well
+% for a few comparisons, but not for many comparisons.
 
 clear all; close all hidden
 disp(['Date run: ', date]);
@@ -58,6 +62,18 @@ testmultcompare('nreps', nreps, 'npergrp', npergrp, 'ntris', ntris, ...
     'nlvls', nlvls, 'randsd', 1, 'interaction', 1, ...
     'slope', 1, 'missing', 0.2, 'alpha', alpha, 'nway', nway);
 
+%% Balanced 3 way ANOVA; no factors have effect; many comparisons
+% no factors have effect; nlvs set to 10 (90 comparisons).
+testmultcompare('nreps', nreps, 'npergrp', npergrp, 'ntris', ntris, ...
+    'nlvls', 10, 'randsd', randsd, 'interaction', interaction, ...
+    'slope', slope, 'missing', missing, 'alpha', alpha, 'nway', nway);
+
+%% Unbalanced 3 way ANOVA; all other factors have effects, many comparisons
+% Factor2, factor1xfactor2 interaction, and linear covariate all have
+% effects (factor 1 always has no effect); nlvs set to 10 (90 comparisons).
+testmultcompare('nreps', nreps, 'npergrp', npergrp, 'ntris', ntris, ...
+    'nlvls', 10, 'randsd', 1, 'interaction', 1, ...
+    'slope', 1, 'missing', 0.2, 'alpha', alpha, 'nway', nway);
 %% Unbalanced 2 way ANOVA; all other factors have effects.
 % Factor2 & factor1xfactor2 have effects (factor 1 always has no effect);
 % covariate has no effect.
