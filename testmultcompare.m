@@ -22,8 +22,8 @@ function [simresults] = testmultcompare(varargin)
 %       generation).
 %   missing : float, fraction of original set to delete (to give unbalanced
 %       design). 0<missing<1
-%   tris : integer, number of levels of random factor.
-%   nlvls : integer, number of levels of fixerd factor.
+%   ntris : integer, number of levels of random factor.
+%   nlvls : integer, number of levels of fixed factor.
 %   randsd : magnitude of random factor effect (variance^0.5)
 %   interaction : magnitude of interaction between fixed and random factors
 %       (variance^0.5)
@@ -36,11 +36,14 @@ function [simresults] = testmultcompare(varargin)
 %   nway : integer (1, 2, or 3 only) for 1, 2, or 3 way ANOVA.
 % Displays results using disp().
 %
-% Returns the following variables:
-%   cimatch : observed error rate (excluding true value of 0 for difference
-%       among levels) for any of the confidence intervals for differences.
-%   pmatch : observed type 1 familywise error rate for pairwise tests. 
-%   cimatch and pmatch should approximate alpha.
+% Returns the following variables in structure simresults
+%   siganova : list of iterations. 1=any factor significant in ANOVA (an
+%       error); 0=no factors significant
+%   outofci : list of iterations. 1 if any pairwise comparisons excluded 
+%       true value of 0 from CI (an error); 0 = true value of 0 was within
+%       CI for all pairwise comparisons
+%   sigcomp : observed type 1 familywise error rate for pairwise tests. 
+%   frequency of 1s in sigcomp and outofci should approximate alpha.
 
 % Default settings
 nreps = 10;
@@ -116,7 +119,7 @@ else
     error('Option nway must be [1,2,3]');
 end
 
-% initials arrays to keep instances identified a significant differences 
+% initializes arrays to keep instances identified a significant differences 
 % or failure to contain 0 in CI
 sigcomp = nan(nreps, 1);
 outofci = nan(nreps, 1);
@@ -215,13 +218,14 @@ disp(['median max subgroup n: ' num2str(median(maxns(successes)))]);
 disp(' '); disp(['Nominal type 1 error rate (alpha): ', num2str(alpha)]);
 
 disp(' ');disp('Simulation results:');
-disp(['Observed type 1 error rate: ', ...
+disp(['Observed family-wise type 1 error rate: ', ...
     num2str(sum(sigcomp)/numel(sigcomp))]);
 disp(['Fraction of time all CIs contain true difference: ',...
     num2str(1-sum(outofci)/numel(outofci))]);
 disp(['Observed type 1 error rate for ANOVA: ', ...
     num2str(sum(siganova)/numel(siganova))]);
 disp(['Number of completed iterations: ', num2str(numel(sigcomp))]);
+disp(['Number of pairwise comparison in sim: ', num2str(numel(Pmat))]);
 disp(' ')
 
 simresults.sigcomp=sigcomp;

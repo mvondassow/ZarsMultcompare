@@ -17,9 +17,13 @@
 % components associated with these terms is 1; setting slope = 1 makes 
 % maximum the difference among subgroup members due to T reach 1.
 %
-% 2016Mat03: Added 2 simulations for more than 3 treatment levels (many
+% 2016Mar03: Added 2 simulations for more than 3 treatment levels (many
 % more comparisons) because some multiple comparisons procedures work well
 % for a few comparisons, but not for many comparisons.
+% 
+% 2017Jun10: Rerun after fixing multcompareRandom.m function so that it
+% generates P-values for all pairwise comparisons (the previous version
+% had the wrong limit for the for loop that selected pairs to compare).
 
 clear all; close all hidden
 disp(['Date run: ', date]);
